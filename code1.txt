@@ -1,0 +1,109 @@
+import pandas import numpy as np import pickle
+from pandas.tools.plotting import scatter_matrix
+import matplotlib.pyplot as plt
+from sklearn import model_selection
+from sklearn.metrics import classification_report from sklearn.metrics import confusion_matrix from sklearn.metrics import accuracy_score
+from sklearn.linear_model import LogisticRegression
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
+from sklearn.naive_bayes import GaussianNB
+from sklearn import tree from sklearn.svm import SVC from sklearn import svm
+
+#loading of the data
+url="kddcup-2 classification.data_10_percent_corrected"
+names = ['a', 'b', 'c', 'd',
+'e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z','aa','ab','ac','ad','ae',' af','ag','ah','ai','aj','ak','al','am','an','ao','class']
+dataset  = pandas.read_csv(url, names=names) print("data loaded successfully") print(dataset.shape)
+
+#printing dataset description and classes of datasets
+def details_of_dataset(): print(dataset.describe()) print(dataset.groupby('class').size())
+
+
+
+#showing dataset through histogram
+def show_dataset_histogram():
+dataset.hist()
+plt.show() 
+#showing dataset through scatter plotting
+def show_dataset_scatter(): scatter_matrix(dataset) plt.show()
+
+#spliting the loaded dataset into two,
+#80% of which we will use to train our models and 20% that we will hold back as a validation dataset.
+array = dataset.values
+X = array[:,0:40] Y = array[:,41] validation_size = 0.20 seed = 7
+X_train, X_validation, Y_train, Y_validation = model_selection.train_test_split(X, Y, test_size=validation_size, random_state=seed)
+length=len(X_validation)
+
+
+#acuuracy=ratio of the number of correctly predicted instances in divided by the total number of instances in the dataset multiplied by 100
+
+#buidling models
+def model_accuracy():
+seed = 7
+scoring = 'accuracy'
+
+
+models = []
+models.append(('CART', DecisionTreeClassifier()))
+models.append(('NB', GaussianNB()))
+# models.append(('SVM', SVC()))
+
+
+# evaluate each model in turn
+results = []
+names = []
+for name, model in models:
+kfold = model_selection.KFold(n_splits=10, random_state=seed)
+cv_results = model_selection.cross_val_score(model, X_train, Y_train, cv=kfold, scoring=scoring)
+results.append(cv_results)
+names.append(name)
+msg = "%s: %f (%f)" % (name, cv_results.mean(), cv_results.std())
+print(msg)
+
+
+
+def naive_bayses_training():
+print("naive bayses classification algorithm")
+clf = GaussianNB() clf.fit(X_train, Y_train) GaussianNB(priors=None) 
+
+filename = 'naive.sav'
+pickle.dump(clf, open(filename, 'wb'))
+
+
+predictions = clf.predict(X_validation) print(accuracy_score(Y_validation, predictions)) print(confusion_matrix(Y_validation, predictions)) print(classification_report(Y_validation, predictions))
+
+
+
+def decision_tree_training():
+print("decision tree  classification algorithm") clf = tree.DecisionTreeClassifier() clf.fit(X_train, Y_train)
+
+filename = 'decision_tree.sav'
+pickle.dump(clf, open(filename, 'wb'))
+
+
+predictions = clf.predict(X_validation) print(accuracy_score(Y_validation, predictions)) print(confusion_matrix(Y_validation, predictions)) print(classification_report(Y_validation, predictions))
+
+
+
+def svm_training():
+print("SVM classification algorithm")
+sv = svm.SVC()
+sv.fit(X_train, Y_train)
+
+
+filename = 'svm.sav'
+pickle.dump(sv, open(filename, 'wb'))
+
+
+predictions = sv.predict(X_validation) print(accuracy_score(Y_validation, predictions)) print(confusion_matrix(Y_validation, predictions)) print(classification_report(Y_validation, predictions))
+
+
+
+#functions calls
+#details_of_dataset()
+#show_dataset_histogram()
+#show_dataset_scatter()
+#model_accuracy() naive_bayses_training() decision_tree_training()
+#knn_training()
+svm_training() 
